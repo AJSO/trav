@@ -2,7 +2,7 @@
 
 ###Models###
 
-####User Model####
+Markup : ####User Model####
 - Username,
 - Email
 - Phone Number (International format for easy OTP Verification)

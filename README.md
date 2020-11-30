@@ -1,8 +1,8 @@
 # trav
 
-##Models
+## Models
 
-####User Model
+#### User Model
 - Username,
 - Email
 - Phone Number (International format for easy OTP Verification)

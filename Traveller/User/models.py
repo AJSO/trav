@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin 
+from django.core.validators import RegexValidator
 
 
 ACCOUNT_STATUS = (
@@ -9,27 +10,41 @@ ACCOUNT_STATUS = (
 
 # creating a custom user model
 class UserAccountManager():
-    def create_user(self, email, name, password=None):
+    def create_user(self, email, name, phone, password=None):
         if not email:
             raise ValueError('Email Address is required')
         if not name:
             raise ValueError('Full name is required.')
+        if not phone:
+            raise ValueError('Mobile Phone required')
 
         email = self.normalize_email(email)
         # creating a normal user
-        user = self.model(email=email, name=name)
+        user = self.model(email=email, name=name,  phone=phone)
 
         user.set_password(password) #making the password encrypted
         user.save(using=self._db)
 
         return user
-
-#creating a superuser.
-    def create_superuser(self, email, name, password):
+    #creating a staff user
+    def create_staffuser(self, email, name, phone, password):
         user = self.create_user(
             email= self.normalize_email(email),
             password= password,
-            name=name
+            name=name,
+            phone=phone,
+        )
+        user.is_staff = True
+        user.save(using=self._db)
+        return user
+        
+    #creating a superuser.
+    def create_superuser(self, email, name, phone, password):
+        user = self.create_user(
+            email= self.normalize_email(email),
+            password= password,
+            name=name,
+            phone=phone,
         )
         user.is_admin = True
         user.is_staff = True
@@ -38,8 +53,10 @@ class UserAccountManager():
         return user
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
+    phone_regex = RegexValidator( regex   =r'^\+?1?\d{9,14}$', message ="Phone number must be entered in the format: '+999999999'. Up to 14 digits allowed.")
     email =  models.EmailField(max_length=225, unique=True)
     name = models.CharField(max_length=225)
+    phone = models.CharField(validators=[phone_regex], max_length=17, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -49,7 +66,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     objects = UserAccountManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name']
+    REQUIRED_FIELDS = ['name', 'phone']
 
     def get_full_name(self):
         return self.name
@@ -59,3 +76,23 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return self.email
+    
+    #does the user has specific permissions
+    def has_perm(self, perm, obj=None):
+        return True #yes
+    
+    #Does the user have permissions to view the app `app_label`?
+    def has_module_perms(self, app_label):
+        return True
+    
+    @property
+    def is_staff(self):
+        return self.staff
+
+    @property
+    def is_admin(self):
+        return self.admin
+
+    @property
+    def is_active(self):
+        return self.active

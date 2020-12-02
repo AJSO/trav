@@ -47,7 +47,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(_('email address'), unique=True)
     full_name = models.CharField(max_length=150, blank=True)
-    phone = models.CharField(max_length=225, unique=True)
+    phone = models.CharField(validators=[phone_regex], max_length=17, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(default=timezone.now)
     is_staff = models.BooleanField(default=False)

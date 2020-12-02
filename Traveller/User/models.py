@@ -4,11 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.validators import RegexValidator
 
-# Not needed, we shall grab the default status from django 
-# ACCOUNT_STATUS = (
-#     ("Active","Active"),
-#     ("Disabled","Disabled"),
-# ) 
 
 class UserAccountManager(BaseUserManager):
 
@@ -26,18 +21,6 @@ class UserAccountManager(BaseUserManager):
         user.set_password(password)
         user.save()
         return user
-    
-    #creating a staff user (Staff will be created in the admin panel by Admin)
-    # def create_staffuser(self, email, name, phone, password):
-    #     user = self.create_user(
-    #         email= self.normalize_email(email),
-    #         password= password,
-    #         name=name,
-    #         phone=phone,
-    #     )
-    #     user.is_staff = True
-    #     user.save(using=self._db)
-    #     return user
 
     #creating a superuser. (No need to add phone number, it will be required automatically)
     def create_superuser(self, email, full_name, password, **other_fields):
@@ -79,28 +62,6 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.full_name} {self.phone}"
-
-    
-    #does the user has specific permissions (We can handle permissions in views or using DRF)
-    # def has_perm(self, perm, obj=None):
-    #     return True #yes
-    
-    # #Does the user have permissions to view the app `app_label`?
-    # def has_module_perms(self, app_label):
-    #     return True
-    
-    # @property
-    # def is_staff(self):
-    #     return self.staff
-
-    # @property
-    # def is_admin(self):
-    #     return self.admin
-
-    # @property
-    # def is_active(self):
-    #     return self.active
-
 
     #function to store the otp requests
 class PhoneOTP(models.Model):

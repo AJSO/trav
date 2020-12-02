@@ -1,105 +1,112 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin 
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.validators import RegexValidator
 
+# Not needed, we shall grab the default status from django 
+# ACCOUNT_STATUS = (
+#     ("Active","Active"),
+#     ("Disabled","Disabled"),
+# ) 
 
-ACCOUNT_STATUS = (
-    ("Active","Active"),
-    ("Disabled","Disabled"),
-) 
+class UserAccountManager(BaseUserManager):
 
-# creating a custom user model
-class UserAccountManager():
-    def create_user(self, email, name, phone, password=None):
+    #Creating Normal User
+    def create_user(self, email, full_name, password, **other_fields):
+
         if not email:
-            raise ValueError('Email Address is required')
-        if not name:
-            raise ValueError('Full name is required.')
-        if not phone:
-            raise ValueError('Mobile Phone required')
+            raise ValueError(_('Email Address is required'))
+        
+        if not full_name:
+            raise ValueError(_('Full name is required'))
 
         email = self.normalize_email(email)
-        # creating a normal user
-        user = self.model(email=email, name=name,  phone=phone)
-
-        user.set_password(password) #making the password encrypted
-        user.save(using=self._db)
+        user = self.model(email=email, full_name=full_name, **other_fields)
+        user.set_password(password)
+        user.save()
         return user
     
-    #creating a staff user
-    def create_staffuser(self, email, name, phone, password):
-        user = self.create_user(
-            email= self.normalize_email(email),
-            password= password,
-            name=name,
-            phone=phone,
-        )
-        user.is_staff = True
-        user.save(using=self._db)
-        return user
-        
-    #creating a superuser.
-    def create_superuser(self, email, name, phone, password):
-        user = self.create_user(
-            email= self.normalize_email(email),
-            password= password,
-            name=name,
-            phone=phone,
-        )
-        user.is_admin = True
-        user.is_staff = True
-        user.is_superuser = True
-        user.save(using=self._db)
-        return user
+    #creating a staff user (Staff will be created in the admin panel by Admin)
+    # def create_staffuser(self, email, name, phone, password):
+    #     user = self.create_user(
+    #         email= self.normalize_email(email),
+    #         password= password,
+    #         name=name,
+    #         phone=phone,
+    #     )
+    #     user.is_staff = True
+    #     user.save(using=self._db)
+    #     return user
+
+    #creating a superuser. (No need to add phone number, it will be required automatically)
+    def create_superuser(self, email, full_name, password, **other_fields):
+
+        other_fields.setdefault('is_staff', True)
+        other_fields.setdefault('is_superuser', True)
+        other_fields.setdefault('is_active', True)
+
+        if other_fields.get('is_staff') is not True:
+            raise ValueError(
+                'Superuser must be assigned to is_staff=True.')
+        if other_fields.get('is_superuser') is not True:
+            raise ValueError(
+                'Superuser must be assigned to is_superuser=True.')
+
+        return self.create_user(email, full_name, password, **other_fields)
+
+
+
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
-    phone_regex = RegexValidator( regex   =r'^\+?1?\d{9,14}$', message ="Phone number must be entered in the format: '+1111111111'. Up to 14 digits allowed.")
-    email =  models.EmailField(max_length=225, unique=True)
-    name = models.CharField(max_length=225)
-    phone = models.CharField(validators=[phone_regex], max_length=17, unique=True)
+
+    phone_regex = RegexValidator(regex = r'^\+?1?\d{9,14}$', message = "Phone number must be entered in the format: '+1111111111'. Up to 14 digits allowed.")
+
+    email = models.EmailField(_('email address'), unique=True)
+    full_name = models.CharField(max_length=150, blank=True)
+    phone = models.CharField(max_length=225, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    date_updated = models.DateTimeField(default=timezone.now)
+    about = models.TextField(_(
+        'about'), max_length=500, blank=True)
     is_staff = models.BooleanField(default=False)
-    is_superuser = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
 
     objects = UserAccountManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name', 'phone']
+    REQUIRED_FIELDS = ['full_name', 'phone']
 
-    def get_full_name(self):
-        return self.name
-
-    def get_short_name(self):
-        return self.name
-    
     def __str__(self):
-        return self.email
-    
-    #does the user has specific permissions
-    def has_perm(self, perm, obj=None):
-        return True #yes
-    
-    #Does the user have permissions to view the app `app_label`?
-    def has_module_perms(self, app_label):
-        return True
-    
-    @property
-    def is_staff(self):
-        return self.staff
+        return f"{self.full_name} {self.phone}"
 
-    @property
-    def is_admin(self):
-        return self.admin
-
-    @property
-    def is_active(self):
-        return self.active
     
+    #does the user has specific permissions (We can handle permissions in views or using DRF)
+    # def has_perm(self, perm, obj=None):
+    #     return True #yes
+    
+    # #Does the user have permissions to view the app `app_label`?
+    # def has_module_perms(self, app_label):
+    #     return True
+    
+    # @property
+    # def is_staff(self):
+    #     return self.staff
+
+    # @property
+    # def is_admin(self):
+    #     return self.admin
+
+    # @property
+    # def is_active(self):
+    #     return self.active
+
+
     #function to store the otp requests
 class PhoneOTP(models.Model):
-    phone_regex = RegexValidator( regex   =r'^\+?1?\d{9,14}$', message ="Phone number must be entered in the format: '+111111111'. Up to 14 digits allowed.")
+
+    phone_regex = RegexValidator( regex = r'^\+?1?\d{9,14}$', message = "Phone number must be entered in the format: '+111111111'. Up to 14 digits allowed.")
+
     phone       = models.CharField(validators=[phone_regex], max_length=17, unique=True)
     otp         = models.CharField(max_length = 9, blank = True, null= True)
     count       = models.IntegerField(default = 0, help_text = 'Number of otp sent')

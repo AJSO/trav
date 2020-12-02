@@ -38,9 +38,6 @@ class UserAccountManager(BaseUserManager):
 
         return self.create_user(email, full_name, password, **other_fields)
 
-
-
-
 class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     phone_regex = RegexValidator(regex = r'^\+?1?\d{9,14}$', message = "Phone number must be entered in the format: '+1111111111'. Up to 14 digits allowed.")

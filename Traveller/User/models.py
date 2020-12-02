@@ -50,8 +50,6 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=225, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(default=timezone.now)
-    about = models.TextField(_(
-        'about'), max_length=500, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
 

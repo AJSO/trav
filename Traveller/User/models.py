@@ -19,12 +19,14 @@ class UserAccountManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, full_name=full_name, **other_fields)
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
+        
         return user
 
     #creating a superuser. (No need to add phone number, it will be required automatically)
     def create_superuser(self, email, full_name, password, **other_fields):
 
+        
         other_fields.setdefault('is_staff', True)
         other_fields.setdefault('is_superuser', True)
         other_fields.setdefault('is_active', True)
@@ -36,7 +38,9 @@ class UserAccountManager(BaseUserManager):
             raise ValueError(
                 'Superuser must be assigned to is_superuser=True.')
 
-        return self.create_user(email, full_name, password, **other_fields)
+        user = self.create_user(email, full_name, password, **other_fields)
+
+        return user
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
 

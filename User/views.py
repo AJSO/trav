@@ -4,6 +4,8 @@ User = get_user_model()
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import permissions
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import MyTokenObtainPairSerializer
 
 # Create your views here.
 class SignupView(APIView):
@@ -33,4 +35,8 @@ class SignupView(APIView):
         else:
             return Response({'error': 'Passwords do not match'})
 
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 

@@ -129,6 +129,8 @@ STATICFILES_DIRS = [
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 SITE_ID = 1
 
 AUTH_USER_MODEL = 'User.UserAccount'
@@ -144,9 +146,17 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:8081'
+]
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'andre.ecurut@gmail.com'
 EMAIL_HOST_PASSWORD = 'muzhhusorgpiieda'
 EMAIL_USE_TLS = True
+
+
+JWT_AUTH_COOKIE = 'myHttpOnlyCookie'
+CSRF_COOKIE_NAME = "csrftoken"
